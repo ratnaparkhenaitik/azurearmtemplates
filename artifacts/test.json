@@ -1,0 +1,165 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetname": {
+            "type": "string",
+            "defaultValue": "vnet",
+            "metadata": {
+                "description": "enter virtual network name"
+            }
+        },
+        "address": {
+            "type": "string",
+            "defaultValue": "10.10.0.0/16",
+            "metadata": {
+                "description": "specify address spaces"
+            }
+        },
+        "subnet1address": {
+            "type": "string",
+            "defaultValue": "10.10.0.0/24",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "subnet2address": {
+            "type": "string",
+            "defaultValue": "10.10.1.0/24",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "nsgname": {
+            "type": "string",
+            "defaultValue": "nsg",
+            "metadata": {
+                "description": "specify name of nsg"
+            }
+        }
+    },
+    "functions": [],
+    "variables": {
+        "subnet1name": "subnet1",
+        "subnet2name": "subnet2",
+        "httprule": "http",
+        "rdp": "rdp",
+        "https": "https",
+        "ssh": "ssh",
+        "outbound": "allowalloutbound"
+    },
+    "resources": [{
+        "name": "[parameters('vnetname')]",
+        "type": "Microsoft.Network/virtualNetworks",
+        "apiVersion": "2019-11-01",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "displayName": "[parameters('vnetname')]"
+        },
+        "properties": {
+            "addressSpace": {
+                "addressPrefixes": [
+                    "[parameters('address')]"
+                ]
+            },
+            "subnets": [
+                {
+                    "name": "[variables('subnet1name')]",
+                    "properties": {
+                        "addressPrefix": "[parameters('subnet1address')]"
+                    }
+                },
+                {
+                    "name": "[variables('subnet2name')]",
+                    "properties": {
+                        "addressPrefix": "[parameters('subnet2address')]"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "name": "[parameters('nsgname')]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "apiVersion": "2019-11-01",
+        "location": "[resourceGroup().location]",
+        "dependsOn": ["[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetname'))]"],
+        "properties": {
+            "securityRules": [
+                {
+                    "name": "[variables('httprule')]",
+                    "properties": {
+                        "description": "http rule on port 80",
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "80",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 1000,
+                        "direction": "Inbound"
+                    }
+                   
+                },
+                {
+                    "name": "[variables('https')]",
+                    "properties": {
+                        "description": "https rule on port 443",
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "443",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 1001,
+                        "direction": "Inbound"
+                    }
+                },
+                {
+                    "name": "[variables('rdp')]",
+                    "properties": {
+                        "description": "remote desktop rule on port 3389",
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "3389",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 1002,
+                        "direction": "Inbound"
+                    }
+                },
+                {
+                    "name": "[variables('ssh')]",
+                    "properties": {
+                         "description": "ssh rule on port 25",
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "25",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 1003,
+                        "direction": "Inbound"
+                    }
+                },
+                {
+                    "name": "[variables('outbound')]",
+                    "properties": {
+                        "description": "allow all outbound traffic",
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "*",
+                        "sourceAddressPrefix": "*",
+                        "destinationAddressPrefix": "*",
+                        "access": "Allow",
+                        "priority": 1004,
+                        "direction": "Outbound"
+                    }
+                }
+            ]
+        }
+    }
+    ],
+    "outputs": {}
+}

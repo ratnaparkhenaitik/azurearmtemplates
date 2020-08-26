@@ -1,0 +1,96 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "stgsku": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "metadata": {
+                "description": "specfiy type of storage acccount kind"
+            }
+        },
+        "stgkind": {
+            "type": "string",
+            "allowedValues": ["BlobStorage","BlockBolbStorage","FileStorage","Storage","StorageV2"],
+            "defaultValue": "StorageV2",
+            "metadata": {
+                "description": "specify type of storage account required"
+            }
+        },
+        "stglocation": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "specify location of storage account"
+            }
+        },
+        "stgaccesstier": {
+            "type": "string",
+            "defaultValue": "Hot",
+            "allowedValues": ["Hot","Cool"],
+            "metadata": {
+                "description": "specify access tier for storage account"
+            }
+        },
+        "skutier": {
+            "type":  "string",
+            "allowedValues": ["Premium","Standard"],
+            "defaultValue": "Standard",
+            "metadata": {
+                "description": "specify sku tier"
+            }
+        },
+       
+       "containerName": {
+           "type": "string",
+           "defaultValue": "container",
+           "metadata": {
+               "description": "description"
+           }
+       }
+    },
+	"variables": {
+        "stgname": "[concat(UniqueString(resourceGroup().id), 'stg')]"
+
+    },
+    "resources": [
+        {
+            "name": "[concat(variables('stgname'))]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+
+            "sku": {
+              "name": "[parameters('stgsku')]",
+              "tier": "[parameters('skutier')]"
+            },
+            "kind": "[parameters('stgkind')]",
+            "location": "[parameters('stglocation')]",
+            "identity": {
+              "type": "SystemAssigned"
+            },
+            "properties": {
+              "accessTier": "[parameters('stgaccesstier')]",
+              "supportsHttpsTrafficOnly": "true",
+              "allowBlobPublicAccess": "true",
+              "minimumTlsVersion": "TLS1_0"
+
+             }
+             
+             
+            },
+            {
+                "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+                "apiVersion": "2019-06-01",
+                "name": "[concat(variables('stgname'),'/default/',parameters('containerName'))]",
+                "dependsOn": ["[resourceId('Microsoft.Storage/storageAccounts',concat(variables('stgname')))]"]
+            }
+
+          
+    ],
+	"outputs":{
+        "Depolymentstat": {
+            "type": "string",
+            "value": "[deployment().name]"
+        }
+    }
+}
